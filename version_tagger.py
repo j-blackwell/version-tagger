@@ -71,6 +71,7 @@ def bump(
     minor: bool = False,
     patch: bool = False,
     manual: str = "",
+    dry_run: bool = False,
 ):
     flags = {"major": major, "minor": minor, "patch": patch, "manual": manual}
     flags_set = [k for k, v in flags.items() if v]
@@ -82,7 +83,12 @@ def bump(
     _check_clean_git()
     v = Version.from_git()
     v_new = _update_version(v, major, minor, patch, manual)
+
     print(f"Updating {v.base} -> {v_new}")
+    if dry_run:
+        print("Dry run, not updating...")
+        return
+
     _update_pyproject_toml(v_new)
     _git_commit_and_tag(v_new)
 
