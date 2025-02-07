@@ -8,9 +8,10 @@ def _check_clean_git():
     repo = git.Repo(".")
     if repo.is_dirty(untracked_files=True):
         changes = repo.untracked_files + [x.a_path for x in repo.index.diff(None)]
-        print(f"Following files have changes {changes}")
-        print("Ensure git tree is clean")
-        SystemExit("Exiting...")
+        message = f"""Following files have changes {changes}
+Ensure git tree is clean before continuing.
+Exiting..."""
+        raise ValueError(message)
 
 
 def _update_version(
@@ -63,10 +64,10 @@ app = typer.Typer()
 
 @app.command()
 def bump(
-    major: bool = typer.Option(False, "--major", help="Bump the major version"),
-    minor: bool = typer.Option(False, "--minor", help="Bump the minor version"),
-    patch: bool = typer.Option(False, "--patch", help="Bump the patch version"),
-    manual: str = typer.Argument("", help="Set the version explicitly"),
+    major: bool = False,
+    minor: bool = False,
+    patch: bool = False,
+    manual: str = "",
 ):
     flags = {"major": major, "minor": minor, "patch": patch, "manual": manual}
     flags_set = [k for k, v in flags.items() if v]
