@@ -81,7 +81,7 @@ def bump(
         raise ValueError(f"Must have one flag set.")
 
     _check_clean_git()
-    v = Version.from_git()
+    v = Version.from_any_vcs(latest_tag=True)
     v_new = _update_version(v, major, minor, patch, manual)
 
     print(f"Updating {v.base} -> {v_new}")
