@@ -1,7 +1,9 @@
+from pathlib import Path
 import git
 from dunamai import Version
 import toml
 import typer
+from typer.main import subprocess
 
 
 def _check_clean_git():
@@ -27,7 +29,7 @@ def _update_version(
     if minor:
         return f"{v_list[0]}.{v_list[1]+1}.0"
     if patch:
-        return f"{v_list[0]}.{v_list[1]}.{v_list[2]}"
+        return f"{v_list[0]}.{v_list[1]}.{v_list[2]+1}"
     else:
         return manual
 
@@ -46,17 +48,18 @@ def _git_commit_and_tag(v_new: str):
     repo = git.Repo(".")
     current_message = repo.head.commit.message.strip()
     new_message = f"{current_message}\n\nvesion({v_new})"
-    try:
-        repo.index.add(["pyproject.toml"])
-        repo.git.commit("--amend", "-m", new_message)
-        repo.create_tag(f"v{v_new}")
-        origin = repo.remote()
-        origin.push(force_with_lease=True)
-        origin.push(tags=True)
-        print(f"Successfully tagged and pushed version {v_new}.")
-    except git.GitCommandError as e:
-        print(f"Error running git command: {e}")
-        SystemExit("Exiting...")
+    additions = ["pyproject.toml"]
+
+    if Path("uv.lock").exists():
+        subprocess.run(["uv", "sync"])
+        additions.append("uv.lock")
+
+    repo.index.add(additions)
+    repo.git.commit("--amend", "-m", new_message)
+    repo.create_tag(f"v{v_new}")
+    origin = repo.remote()
+    origin.push(force_with_lease=True)
+    origin.push(tags=True)
 
 
 app = typer.Typer()
