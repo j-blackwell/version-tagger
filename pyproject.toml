@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling"]
+requires = [ "hatchling",]
 build-backend = "hatchling.build"
 
 [project]
@@ -8,20 +8,8 @@ version = "0.1.0"
 description = "Add and bump semantic version tags to commits"
 readme = "README.md"
 requires-python = ">=3.10,<3.14"
-dependencies = [
-    "dunamai>=1.23.0",
-    "gitpython>=3.1.44",
-    "toml>=0.10.2",
-    "typer>=0.15.1",
-]
-classifiers = [
-    "Development Status :: 3 - Alpha",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
-]
-
+dependencies = [ "dunamai>=1.23.0", "gitpython>=3.1.44", "toml>=0.10.2", "typer>=0.15.1",]
+classifiers = [ "Development Status :: 3 - Alpha", "Programming Language :: Python :: 3.10", "Programming Language :: Python :: 3.11", "Programming Language :: Python :: 3.12", "Programming Language :: Python :: 3.13",]
 [[project.authors]]
 name = "James Blackwell"
 email = "33688964+j-blackwell@users.noreply.github.com"
@@ -36,4 +24,4 @@ Source = "https://github.com/j-blackwell/version-tagger"
 bump = "version_tagger:bump"
 
 [tool.hatch.build]
-include = ["version_tagger.py"]
+include = [ "version_tagger.py",]
