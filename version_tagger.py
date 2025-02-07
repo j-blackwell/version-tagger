@@ -69,7 +69,7 @@ app = typer.Typer()
 def bump(
     major: bool = False,
     minor: bool = False,
-    patch: bool = False,
+    patch: bool = True,
     manual: str = "",
     dry_run: bool = False,
 ):
