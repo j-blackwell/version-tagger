@@ -9,7 +9,6 @@ import subprocess
 
 def _check_clean_git():
     repo = git.Repo(".")
-
     try:
         origin = repo.remote()
         origin.pull()
