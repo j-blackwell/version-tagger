@@ -65,7 +65,9 @@ def _git_commit_and_tag(v_new: str):
 
     # TODO: Check here
     result = subprocess.run(
-        ["git", "diff", "--staged", "--color=always"], capture_output=True, text=True
+        ["git", "diff", "--staged", "--color=always", "--unified=0"],
+        capture_output=True,
+        text=True,
     )
     print(result.stdout)
 
