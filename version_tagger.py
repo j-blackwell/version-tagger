@@ -4,11 +4,14 @@ import git
 from dunamai import Version
 import toml
 import typer
-from typer.main import subprocess
+import subprocess
 
 
 def _check_clean_git():
     repo = git.Repo(".")
+    origin = repo.remote()
+    origin.pull()
+
     if repo.is_dirty(untracked_files=True):
         changes = repo.untracked_files + [x.a_path for x in repo.index.diff(None)]
         message = f"""Following files have changes {changes}
@@ -58,11 +61,22 @@ def _git_commit_and_tag(v_new: str):
     repo.index.add(additions)
 
     # TODO: Check here
-    repo.git.commit("--amend", "-m", new_message)
-    repo.create_tag(f"v{v_new}")
-    origin = repo.remote()
-    origin.push(force_with_lease=True)
-    origin.push(tags=True)
+    result = subprocess.run(
+        ["git", "diff", "--staged", "--color=always"], capture_output=True, text=True
+    )
+    print(result.stdout)
+
+    response = input("Proceed with updating pyproject.toml and git? [Y]/n\n")
+
+    if response.lower() in {"y", "yes", ""}:
+        repo.git.commit("--amend", "-m", new_message)
+        repo.create_tag(f"v{v_new}")
+        origin = repo.remote()
+        origin.push(force_with_lease=True)
+        origin.push(tags=True)
+    else:
+        repo.git.reset("--hard")
+        raise ValueError()
 
 
 app = typer.Typer()
@@ -107,13 +121,8 @@ def bump(
     v_new = _update_version(v, major, minor, patch, manual)
 
     print(f"Updating {v.base} -> {v_new}")
-    response = input("Proceed with updating pyproject.toml and git? [Y]/n\n")
-
-    if response.lower() in {"y", "yes", ""}:
-        _update_pyproject_toml(v_new)
-        _git_commit_and_tag(v_new)
-    else:
-        SystemExit()
+    _update_pyproject_toml(v_new)
+    _git_commit_and_tag(v_new)
 
 
 if __name__ == "__main__":
