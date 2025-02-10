@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Annotated
 import git
 from dunamai import Version
 import toml
@@ -55,6 +56,8 @@ def _git_commit_and_tag(v_new: str):
         additions.append("uv.lock")
 
     repo.index.add(additions)
+
+    # TODO: Check here
     repo.git.commit("--amend", "-m", new_message)
     repo.create_tag(f"v{v_new}")
     origin = repo.remote()
@@ -67,11 +70,31 @@ app = typer.Typer()
 
 @app.command()
 def bump(
-    major: bool = False,
-    minor: bool = False,
-    patch: bool = True,
-    manual: str = "",
+    major: bool = typer.Option(default=False, help="Bump major version"),
+    minor: bool = typer.Option(default=False, help="Bump minor version"),
+    patch: bool = typer.Option(default=True, help="Bump patch version"),
+    manual: str = typer.Argument(
+        default="",
+        help="Set version manually in {major}.{minor}.{patch} format",
+    ),
 ):
+    """
+    Bump, commit, tag, push.
+
+    Bump your version number by one patch, minor or major number.
+    Or set version number manually.
+
+    Version numbers are assumed to be in the format:\n\n
+
+    `v{major}.{minor}.{patch}`\n\n
+
+    The old version number will be retreived from the version control tag.
+
+    `bump` will then increment the version number, before writing the new value
+    to the `pyproject.toml` file and `uv.lock` file (if exists).
+    It will commit these changes to the repo (appending to the previous commit),
+    tag the commit with the version number, and push the changes.
+    """
     flags = {"major": major, "minor": minor, "patch": patch, "manual": manual}
     flags_set = [k for k, v in flags.items() if v]
     if len(flags_set) > 1:
