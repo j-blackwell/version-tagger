@@ -47,7 +47,7 @@ def _update_pyproject_toml(v_new: str):
 def _git_commit_and_tag(v_new: str):
     repo = git.Repo(".")
     current_message = repo.head.commit.message.strip()
-    new_message = f"{current_message}\n\nvesion({v_new})"
+    new_message = f"{current_message}\n\nversion({v_new})"
     additions = ["pyproject.toml"]
 
     if Path("uv.lock").exists():
@@ -71,7 +71,6 @@ def bump(
     minor: bool = False,
     patch: bool = True,
     manual: str = "",
-    dry_run: bool = False,
 ):
     flags = {"major": major, "minor": minor, "patch": patch, "manual": manual}
     flags_set = [k for k, v in flags.items() if v]
@@ -85,12 +84,13 @@ def bump(
     v_new = _update_version(v, major, minor, patch, manual)
 
     print(f"Updating {v.base} -> {v_new}")
-    if dry_run:
-        print("Dry run, not updating...")
-        return
+    response = input("Proceed with updating pyproject.toml and git? [Y]/n\n")
 
-    _update_pyproject_toml(v_new)
-    _git_commit_and_tag(v_new)
+    if response.lower() in {"y", "yes", ""}:
+        _update_pyproject_toml(v_new)
+        _git_commit_and_tag(v_new)
+    else:
+        SystemExit()
 
 
 if __name__ == "__main__":
