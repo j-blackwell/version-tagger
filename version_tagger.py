@@ -2,9 +2,11 @@ from pathlib import Path
 from typing import Annotated
 import git
 from dunamai import Version
+from rich.text import Text
 import toml
 import typer
 import subprocess
+from rich import print
 
 
 def _check_clean_git():
@@ -13,14 +15,16 @@ def _check_clean_git():
         origin = repo.remote()
         origin.pull()
     except git.GitCommandError as e:
-        raise git.GitCommandError("Divergent branch - resolve before bumping.") from e
+        print("Divergent branch - resolve before bumping.")
+        raise typer.Exit()
 
     if repo.is_dirty(untracked_files=True):
         changes = repo.untracked_files + [x.a_path for x in repo.index.diff(None)]
         message = f"""Following files have changes {changes}
 Ensure git tree is clean before continuing.
 Exiting..."""
-        raise ValueError(message)
+        print(message)
+        raise typer.Exit()
 
 
 def _update_version(
@@ -63,13 +67,12 @@ def _git_commit_and_tag(v_new: str):
 
     repo.index.add(additions)
 
-    # TODO: Check here
     result = subprocess.run(
         ["git", "diff", "--staged", "--color=always", "--unified=0"],
         capture_output=True,
         text=True,
     )
-    print(result.stdout)
+    print(Text.from_ansi(result.stdout))
 
     response = input("Proceed with updating pyproject.toml and git? [Y]/n\n")
 
@@ -81,7 +84,8 @@ def _git_commit_and_tag(v_new: str):
         origin.push(tags=True)
     else:
         repo.git.reset("--hard")
-        raise ValueError()
+        print("Resetting repo...")
+        raise typer.Exit()
 
 
 app = typer.Typer()
@@ -128,6 +132,7 @@ def bump(
     print(f"Updating {v.base} -> {v_new}")
     _update_pyproject_toml(v_new)
     _git_commit_and_tag(v_new)
+    print("Update successful!")
 
 
 if __name__ == "__main__":
