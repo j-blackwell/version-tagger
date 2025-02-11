@@ -1,11 +1,12 @@
+import packaging.version as version
 from pathlib import Path
-from typing import Annotated
+
 import git
-from dunamai import Version
-from rich.text import Text
 import toml
 import typer
 import subprocess
+from dunamai import Version
+from rich.text import Text
 from rich import print
 
 
@@ -27,6 +28,16 @@ Exiting..."""
         raise typer.Exit()
 
 
+def _validate_manual(v: Version, manual: str):
+    ver_old = version.Version(v.base)
+    ver_new = version.Version(manual)
+
+    if ver_old > ver_new:
+        raise version.InvalidVersion(
+            f"Existing version {ver_old} is greater than proposed version {ver_new}"
+        )
+
+
 def _update_version(
     v: Version,
     major: bool,
@@ -42,6 +53,7 @@ def _update_version(
     if patch:
         return f"{v_list[0]}.{v_list[1]}.{v_list[2]+1}"
     else:
+        _validate_manual(v, manual)
         return manual
 
 
