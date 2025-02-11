@@ -93,12 +93,25 @@ app = typer.Typer()
 
 @app.command()
 def bump(
-    major: bool = typer.Option(default=False, help="Bump major version"),
-    minor: bool = typer.Option(default=False, help="Bump minor version"),
-    patch: bool = typer.Option(default=True, help="Bump patch version"),
-    manual: str = typer.Argument(
+    major: bool = typer.Option(
+        default=False,
+        help="Bump major version",
+        rich_help_panel="Arguments",
+    ),
+    minor: bool = typer.Option(
+        default=False,
+        help="Bump minor version",
+        rich_help_panel="Arguments",
+    ),
+    patch: bool = typer.Option(
+        default=True,
+        help="Bump patch version",
+        rich_help_panel="Arguments",
+    ),
+    manual: str = typer.Option(
         default="",
         help="Set version manually in {major}.{minor}.{patch} format",
+        rich_help_panel="Arguments",
     ),
 ):
     """
