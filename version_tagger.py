@@ -18,6 +18,8 @@ def _check_clean_git():
     except git.GitCommandError as e:
         print("Divergent branch - resolve before bumping.")
         raise typer.Exit()
+    except ValueError:
+        print("No remote 'origin'")
 
     if repo.is_dirty(untracked_files=True):
         changes = repo.untracked_files + [x.a_path for x in repo.index.diff(None)]
@@ -36,6 +38,8 @@ def _validate_manual(v: Version, manual: str):
         raise version.InvalidVersion(
             f"Existing version {ver_old} is greater than proposed version {ver_new}"
         )
+
+    return True
 
 
 def _update_version(
@@ -91,9 +95,13 @@ def _git_commit_and_tag(v_new: str):
     if response.lower() in {"y", "yes", ""}:
         repo.git.commit("--amend", "-m", new_message)
         repo.create_tag(f"v{v_new}")
-        origin = repo.remote()
-        origin.push(force_with_lease=True)
-        origin.push(tags=True)
+
+        try:
+            origin = repo.remote()
+            origin.push(force_with_lease=True)
+            origin.push(tags=True)
+        except ValueError:
+            print("No remote 'origin'")
     else:
         repo.git.reset("--hard")
         print("Resetting repo...")
