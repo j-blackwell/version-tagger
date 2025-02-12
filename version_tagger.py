@@ -100,6 +100,7 @@ def _git_commit_and_tag(repo: git.Repo, v_new: str):
     response = input("Proceed with updating pyproject.toml and git? [Y]/n\n")
 
     if response.lower() in {"y", "yes", ""}:
+        print(f"Updating repo to v{v_new}")
         repo.git.commit("--amend", "-m", new_message)
         repo.create_tag(f"v{v_new}")
 
