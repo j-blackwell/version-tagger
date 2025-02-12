@@ -18,6 +18,8 @@ def repo():
 
     print(f"\nCreating test repo at: {repo_path.relative_to(original_wd)}\n")
     repo = git.Repo.init(repo_path)
+    repo.git.config("user.name", "github-actions")
+    repo.git.config("user.email", "github-actions@github.com")
     os.chdir(repo_path)
 
     pyproject_path = Path(repo_path, "pyproject.toml")
