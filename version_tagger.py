@@ -79,7 +79,7 @@ def _update_pyproject_toml(v_new: str):
         toml.dump(data, f)
 
 
-def _git_commit_and_tag(repo: git.Repo, v_new: str):
+def _git_commit_and_tag(repo: git.Repo, v_new: str, append: bool):
     current_message = repo.head.commit.message.strip()
     new_message = f"{current_message}\n\nversion({v_new})"
     additions = ["pyproject.toml"]
@@ -101,7 +101,10 @@ def _git_commit_and_tag(repo: git.Repo, v_new: str):
 
     if response.lower() in {"y", "yes", ""}:
         print(f"Updating repo to v{v_new}")
-        repo.git.commit("--amend", "-m", new_message)
+        if append:
+            repo.git.commit("--amend", "-m", new_message)
+        else:
+            repo.git.commit("-m", f"version({v_new})")
         repo.create_tag(f"v{v_new}")
 
         try:
@@ -141,6 +144,12 @@ def bump(
         help="Set version manually in {major}.{minor}.{patch} format",
         rich_help_panel="Arguments",
     ),
+    append: bool = typer.Option(
+        True,
+        "--append/--commit",
+        help="Append previous commit, or create new commit.",
+        rich_help_panel="Arguments",
+    ),
 ):
     """
     Bump, commit, tag, push.
@@ -173,7 +182,7 @@ def bump(
 
     print(f"Updating {v.base} -> {v_new}")
     _update_pyproject_toml(v_new)
-    _git_commit_and_tag(repo, v_new)
+    _git_commit_and_tag(repo, v_new, append)
     print("Update successful!")
 
 
