@@ -247,7 +247,7 @@ wheels = [
 
 [[package]]
 name = "version-tagger"
-version = "0.1.17"
+version = "0.1.18"
 source = { editable = "." }
 dependencies = [
     { name = "dunamai" },
