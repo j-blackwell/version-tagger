@@ -10,14 +10,19 @@ from rich.text import Text
 from rich import print
 
 
-def _check_clean_git():
-    repo = git.Repo(".")
+def _get_repo(path=".") -> git.Repo:
+    return git.Repo(path)
+
+
+def _check_clean_git(repo: git.Repo):
     try:
         origin = repo.remote()
         origin.pull()
     except git.GitCommandError as e:
         print("Divergent branch - resolve before bumping.")
         raise typer.Exit()
+    except ValueError:
+        print("No remote 'origin'")
 
     if repo.is_dirty(untracked_files=True):
         changes = repo.untracked_files + [x.a_path for x in repo.index.diff(None)]
@@ -36,6 +41,13 @@ def _validate_manual(v: Version, manual: str):
         raise version.InvalidVersion(
             f"Existing version {ver_old} is greater than proposed version {ver_new}"
         )
+
+    return True
+
+
+def _get_current_version(repo: git.Repo) -> Version:
+    path = Path(repo.git_dir).parent
+    return Version.from_any_vcs(latest_tag=True, path=path)
 
 
 def _update_version(
@@ -67,8 +79,7 @@ def _update_pyproject_toml(v_new: str):
         toml.dump(data, f)
 
 
-def _git_commit_and_tag(v_new: str):
-    repo = git.Repo(".")
+def _git_commit_and_tag(repo: git.Repo, v_new: str):
     current_message = repo.head.commit.message.strip()
     new_message = f"{current_message}\n\nversion({v_new})"
     additions = ["pyproject.toml"]
@@ -91,9 +102,13 @@ def _git_commit_and_tag(v_new: str):
     if response.lower() in {"y", "yes", ""}:
         repo.git.commit("--amend", "-m", new_message)
         repo.create_tag(f"v{v_new}")
-        origin = repo.remote()
-        origin.push(force_with_lease=True)
-        origin.push(tags=True)
+
+        try:
+            origin = repo.remote()
+            origin.push(force_with_lease=True)
+            origin.push(tags=True)
+        except ValueError:
+            print("No remote 'origin'")
     else:
         repo.git.reset("--hard")
         print("Resetting repo...")
@@ -150,13 +165,14 @@ def bump(
     elif len(flags_set) == 0:
         raise ValueError(f"Must have one flag set.")
 
-    _check_clean_git()
-    v = Version.from_any_vcs(latest_tag=True)
+    repo = _get_repo()
+    _check_clean_git(repo)
+    v = _get_current_version(repo)
     v_new = _update_version(v, major, minor, patch, manual)
 
     print(f"Updating {v.base} -> {v_new}")
     _update_pyproject_toml(v_new)
-    _git_commit_and_tag(v_new)
+    _git_commit_and_tag(repo, v_new)
     print("Update successful!")
 
 
