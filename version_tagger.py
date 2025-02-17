@@ -79,7 +79,7 @@ def _update_pyproject_toml(v_new: str):
         toml.dump(data, f)
 
 
-def _git_commit_and_tag(repo: git.Repo, v_new: str, append: bool):
+def _git_commit_and_tag(repo: git.Repo, v_new: str, append: bool = False):
     current_message = repo.head.commit.message.strip()
     new_message = f"{current_message}\n\nversion({v_new})"
     additions = ["pyproject.toml"]
@@ -145,7 +145,7 @@ def bump(
         rich_help_panel="Arguments",
     ),
     append: bool = typer.Option(
-        True,
+        False,
         "--append/--commit",
         help="Append previous commit, or create new commit.",
         rich_help_panel="Arguments",
