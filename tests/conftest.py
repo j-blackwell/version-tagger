@@ -23,7 +23,7 @@ def repo():
     os.chdir(repo_path)
 
     pyproject_path = Path(repo_path, "pyproject.toml")
-    pyproject_data = {"project": {"version": "1.0.0"}}
+    pyproject_data = {"project": {"name": "testing", "version": "1.0.0"}}
     with open(pyproject_path, "w") as f:
         toml.dump(pyproject_data, f)
 
